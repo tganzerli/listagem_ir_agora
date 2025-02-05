@@ -1,16 +1,21 @@
-# lista_ir_agora
+# Lista ir agora
 
-A new Flutter project.
+This test aims to evaluate the candidate's skills in Flutter, Dart, state management, API consumption, and unit testing. The challenge involves developing the motel listing screen (specifically the "Ir Agora" tab) from the Guia de Motéis GO app, using mock APIs to retrieve data.
 
-## Getting Started
+The listing should display motel name, price, and image, allowing for visual variations without requiring strict adherence to the original design. Additionally, unit tests must be implemented to cover the main components of the application.
 
-This project is a starting point for a Flutter application.
+## Technology
 
-A few resources to get you started if this is your first Flutter project:
+The technology chosen for the development of this project was `Flutter`. Find out more at: [flutter.dev](https://flutter.dev/)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Required Versions
+- **Dart**: [![Dart][dart_img]][dart_ln] [Official Dart Documentation](https://dart.dev)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Flutter**: [![Flutter][flutter_img]][flutter_ln] [Official Flutter Documentation](https://docs.flutter.dev/get-started/install)
+
+
+<!-- Links úteis: -->
+[dart_img]: https://img.shields.io/static/v1?label=Dart&message=3.6.1&color=blue&logo=dart
+[dart_ln]: https://dart.dev/ "https://dart.dev/"
+[flutter_img]: https://img.shields.io/static/v1?label=Flutter&message=3.27.3&color=blue&logo=flutter
+[flutter_ln]: https://docs.flutter.dev/get-started/install "https://docs.flutter.dev/get-started/install"
