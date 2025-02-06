@@ -18,3 +18,30 @@ class DefaultException extends BaseException {
     super.stackTracing,
   });
 }
+
+/// Exception thrown when a validation error occurs.
+///
+/// This exception extends [BaseException] and is intended to be used
+/// when the input data or the state of an object does not satisfy the
+/// defined validation rules. It provides a descriptive error message,
+/// and optionally, a stack trace to help with debugging.
+///
+/// Example usage:
+/// ```dart
+/// if (!user.isValid()) {
+///   throw ValidationException(message: "User validation failed");
+/// }
+/// ```
+class ValidationException extends BaseException {
+  /// Creates a [ValidationException] instance.
+  ///
+  /// The [message] parameter is required and should contain a descriptive
+  /// error message explaining why the validation failed.
+  ///
+  /// The optional [stackTracing] parameter can be used to provide additional
+  /// details about the location in the code where the exception occurred.
+  const ValidationException({
+    required super.message,
+    super.stackTracing,
+  });
+}
