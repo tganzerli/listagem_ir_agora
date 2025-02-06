@@ -18,21 +18,25 @@ The technology chosen for the development of this project was `Flutter`. Find ou
 - [Auto Injector](https://pub.dev/packages/auto_injector): Dependency injection in the app
 
 ## 💡 Usage
-...
+To start the project, use the following command:
+
+```sh
+flutter run -t lib/main.dart --dart-define-from-file .env
+```
 
 ## 🧪 Running Tests
 
 To ensure the functionality of the exception classes, run the unit tests using:
 
 ```sh
-flutter test
+flutter test --dart-define-from-file .env
 ```
 
 ### **Running tests with coverage**
 To generate a coverage report:
 
 ```sh
-flutter test --coverage
+flutter test --coverage --dart-define-from-file .env
 ```
 
 To view coverage results in an HTML report:
@@ -44,6 +48,41 @@ start coverage/html/index.html  # Windows
 ```
 
 ## 📖 **Documentation**
+Below is a brief documentation explaining why to use environment variables (.env) in Flutter and how to leverage `String.fromEnvironment` directly within a class to manage these configurations.
+
+### Why Use Environment Variables (.env) in Flutter?
+
+In many applications, certain settings—such as API URLs, API keys, endpoints, etc.—vary depending on the environment (development, staging, production). Using environment variables helps you:
+
+- **Centralize Configuration**: Keep all environment-specific settings in one place.
+- **Enhance Security**: Avoid hardcoding sensitive information directly in your source code.
+- **Simplify Environment Switching**: Easily change configurations without modifying your code.
+
+Although Flutter doesn’t support .env files out of the box, you can simulate this behavior by using the `--dart-define` flag during the build process, and then access these values in your code with `String.fromEnvironment`.
+
+---
+
+#### How to Use `String.fromEnvironment` in a Class
+
+You can create a dedicated class to centralize and manage your environment variables. For example, consider the following `AppConfig` class:
+
+```dart
+class AppConfig {
+  static const String apiUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'https://api.example.com',
+  );
+
+  static const String apiKey = String.fromEnvironment(
+    'API_KEY',
+    defaultValue: 'default_api_key',
+  );
+}
+```
+
+In this example, if you don't pass any values for `API_URL` or `API_KEY` during the build, the default values will be used.
+
+
 ### Error and Results Handling
 
 In operations that may return results or errors, we can use the typedef `Output<T>` to represent the output of these operations. This typedef allows us to encapsulate both success and failure in a single type using `Either`.
