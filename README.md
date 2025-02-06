@@ -13,6 +13,10 @@ The technology chosen for the development of this project was `Flutter`. Find ou
 
 - **Flutter**: [![Flutter][flutter_img]][flutter_ln] [Official Flutter Documentation](https://docs.flutter.dev/get-started/install)
 
+### Main Packages Used
+
+- [Auto Injector](https://pub.dev/packages/auto_injector): Dependency injection in the app
+
 ## 💡 Usage
 ...
 
@@ -301,6 +305,89 @@ if (command.isExecuting) {
 await command.waitForCompletion(); // Waits for execution to finish
 command.clean(); // Clears previous results
 ```
+
+### Dependency Inversion Principle (DIP)
+
+The Dependency Inversion Principle (DIP) is a cornerstone of the SOLID principles in object-oriented design. It dictates that high-level modules should not depend on low-level modules; rather, both should depend on abstractions. In essence, dependencies should point to abstract interfaces or classes rather than to concrete implementations. This approach makes systems more modular, testable, and maintainable. For an in-depth discussion, check out [this article](https://medium.com/@flutterdynasty/mastering-dependency-inversion-principle-in-flutter-e1748fe9e006).
+
+To effectively apply DIP in your projects, consider the following practices:
+
+- **Define Clear Abstractions**:  
+  Identify interfaces or abstract classes that specify the required behaviors of your high-level modules. Ensure these abstractions remain independent of any concrete implementations.
+
+- **Inject Dependencies**:  
+  Rather than instantiating objects directly within a class, supply them via constructors, methods, or properties. This strategy allows you to swap out concrete implementations with alternative versions that adhere to the same abstraction without altering the high-level module's code.
+
+- **Embrace Inversion of Control (IoC)**:  
+  In DIP, the control flow is inverted so that concrete implementations depend on abstractions. This inversion is often achieved with a dependency injection container that manages the instantiation and resolution of dependencies.
+
+- **Test in Isolation**:  
+  By relying on abstractions and injecting dependencies, you can easily substitute real implementations with mocks or stubs during testing. This isolation facilitates thorough unit testing of each component.
+
+Implementing these practices results in a codebase that is flexible, modular, and easier to maintain.
+
+Here's an example demonstrating DIP in practice:
+
+```dart
+class GetShowUseCaseImpl extends GetShowUseCase {
+  final ShowRepository showRepository;
+
+  GetShowUseCaseImpl({
+    required this.showRepository,
+  });
+}
+```
+
+In this example, `GetShowUseCaseImpl` depends on the abstract `ShowRepository` rather than a concrete implementation, adhering to the DIP and promoting a design that is both decoupled and easy to test.
+
+### Dependency Injection (Auto Injector)
+
+**Coupling** occurs when one class directly depends on another—for example, when a class calls another to execute an operation or retrieve data. In such cases, the first class is tied to the implementation details of the second, creating a dependency that can make maintenance and testing more challenging.
+
+To decouple classes from their dependencies, we use **Dependency Injection**. This technique involves supplying an object’s dependencies through its constructor, setters, or methods, rather than having the object create them itself. You can see an example of this approach in our discussion on the [Dependency Inversion Principle (DIP)](#dependency-inversion-principle-dip).
+
+The [**Auto Injector**](https://pub.dev/packages/auto_injector) strategy facilitates dependency injection by managing the registration and creation of objects within a module. All objects are registered with the injector, which then constructs them on demand or as singletons (i.e., a single instance per module). The entire registration process is handled by the auto_injector system.
+
+There are several methods available for binding (registering) object instances:
+
+- **`injector.add`**: Creates an instance on demand (factory).
+- **`injector.addSingleton`**: Creates an instance once when the module starts.
+- **`injector.addLazySingleton`**: Creates an instance once, at the time of first request.
+- **`injector.addInstance`**: Registers an already existing instance.
+
+Here’s an example of how to configure the injector:
+
+```dart
+final injector = AutoInjector(on: (injector) {
+  injector.addInjector(coreModule);
+  injector.addInjector(showScheduleModule);
+  injector.addInjector(weatherForecastModule);
+
+  injector.addLazySingleton<HomeController>(HomeController.new);
+
+  injector.commit();
+});
+```
+
+In this setup, the dependencies for each instance are automatically resolved using the auto_injector mechanisms.
+
+To retrieve an instance, use the `autoInjector.get` method:
+
+```dart
+// Retrieve an instance of Client
+final client = autoInjector.get<Client>();
+
+// Retrieve an instance with a default value if not found
+final clientWithDefault = autoInjector.get<Client>(defaultValue: Client());
+
+// Alternatively, use tryGet to return null if not available, then provide a fallback
+Client clientOrFallback = autoInjector.tryGet<Client>() ?? Client();
+
+// Retrieve an instance using a specific key
+Client keyedClient = autoInjector.get(key: 'OtherClient');
+```
+
+By using these strategies, your code becomes more modular, easier to test, and simpler to maintain.
 
 <!-- Links úteis: -->
 [dart_img]: https://img.shields.io/static/v1?label=Dart&message=3.6.1&color=blue&logo=dart
