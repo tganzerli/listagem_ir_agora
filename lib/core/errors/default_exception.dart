@@ -45,3 +45,25 @@ class ValidationException extends BaseException {
     super.stackTracing,
   });
 }
+
+/// Exception thrown when a formatted error occurs.
+///
+/// This exception extends [BaseException] and is intended to be used
+/// when an error needs to be presented in a formatted way. It provides
+/// a descriptive error message, and optionally, a stack trace to assist
+/// with debugging.
+///
+/// Example usage:
+/// ```dart
+/// throw FormatedException(message: "An error occurred with specific formatting");
+/// ```
+class FormatedException extends BaseException {
+  /// Creates a [FormatedException] instance.
+  ///
+  /// - [message]: A descriptive error message.
+  /// - [stackTracing]: (Optional) Stack trace details.
+  const FormatedException({
+    required super.message,
+    super.stackTracing,
+  });
+}
