@@ -233,6 +233,74 @@ ValueListenableBuilder<ViewState>(
   - More efficient than `setState()`.
   - Works well with **dependency injection**.
 
+### Command Pattern
+The **Command Pattern** is used in this project to **encapsulate asynchronous actions** while ensuring proper **state management, execution control, and error handling**.
+
+This implementation follows Flutter’s **[Command Pattern](https://docs.flutter.dev/app-architecture/design-patterns/command)** approach and uses the **`Command<BaseException, T>`** class to manage execution safely.
+
+---
+
+#### Why Use the Command Pattern?
+- **Encapsulates asynchronous operations** (`Future<T>`) while keeping execution state.
+- **Prevents concurrent execution issues** (ensures only one execution at a time).
+- **Automatically manages success (`Right<T>`) and failure (`Left<BaseException>`) results.**
+- **Provides utility getters** (`rightResult`, `leftResult`, `isExecuting`, `isSuccess`, `isException`).
+
+
+#### Implementing Commands
+This project provides **three types of commands**:
+1. **`Command0<T>`** – No parameters.
+2. **`Command1<T, P>`** – One parameter.
+3. **`Command2<T, P1, P2>`** – Two parameters.
+
+Each extends `Command<BaseException, T>` and ensures **execution control**.
+
+**Command0<T> (No Parameters)**
+For **simple asynchronous actions** without parameters:
+```dart
+final command = Command0<int>(() async {
+  return Output.right(42);
+});
+
+await command.execute();
+print(command.rightResult); // 42
+```
+
+**Command1<T, P> (Single Parameter)**
+For **actions requiring one parameter**:
+```dart
+final command = Command1<String, int>((value) async {
+  return Output.right("Number: $value");
+});
+
+await command.execute(5);
+print(command.rightResult); // "Number: 5"
+```
+
+**Command2<T, P1, P2> (Two Parameters)**
+For **actions requiring two parameters**:
+```dart
+final command = Command2<bool, int, int>((a, b) async {
+  return Output.right(a + b > 10);
+});
+
+await command.execute(5, 10);
+print(command.rightResult); // true
+```
+
+---
+
+**Command Execution Control**
+All commands **prevent concurrent execution** and provide useful utilities:
+
+```dart
+if (command.isExecuting) {
+  print("Already executing...");
+}
+
+await command.waitForCompletion(); // Waits for execution to finish
+command.clean(); // Clears previous results
+```
 
 <!-- Links úteis: -->
 [dart_img]: https://img.shields.io/static/v1?label=Dart&message=3.6.1&color=blue&logo=dart
