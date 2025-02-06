@@ -170,6 +170,68 @@ Output<Unit> saveData(String data) {
   return success(unit);
 }
 ```
+### State Pattern
+This project follows the **State Pattern**, leveraging **Flutter's native state management tools** to control and notify state changes efficiently. The architecture is based on an abstract class called `ViewModel`, which manages UI state using `ValueNotifier<T>`. This ensures a **reactive and lightweight** state management approach while maintaining compatibility with Flutter’s built-in **[ValueListenableBuilder]**, **[ListenableBuilder]**, and **[AnimatedBuilder]** widgets.
+
+---
+
+#### How to Use?
+
+Each **screen or component** should have a dedicated `ViewModel` that extends `ViewModel<T>`. Additionally, you can create specific **state classes** to represent different UI states.
+
+**Defining States**  
+Define states by extending `ViewState`. Example:
+```dart
+final class HomeSuccess extends ViewState {
+  final String message;
+  HomeSuccess(this.message);
+}
+```
+This approach ensures that each state is **explicitly defined**, making it easier to manage and debug.
+
+---
+
+**Creating a ViewModel**
+A ViewModel extends `ViewModel<T>` and **manages state transitions**.
+```dart
+class HomeViewModel extends ViewModel<ViewState> {
+  HomeViewModel() : super(HomeInitial());
+
+  Future<void> fetchData() async {
+    emit(HomeLoading());
+    await Future.delayed(Duration(seconds: 2)); // Simulating an API call
+    emit(HomeSuccess("Data Loaded Successfully"));
+  }
+}
+```
+- The `fetchData()` function:
+  - Emits a **loading state** (`HomeLoading()`).
+  - Performs an **asynchronous operation** (simulated delay for API calls).
+  - Emits a **success state** (`HomeSuccess()`).
+
+---
+
+**Listening to State Updates**
+The `ViewModel` can be consumed using **Flutter’s built-in listeners**:
+
+```dart
+ValueListenableBuilder<ViewState>(
+  valueListenable: homeViewModel,
+  builder: (context, state, _) {
+    if (state is HomeLoading) {
+      return CircularProgressIndicator();
+    } else if (state is HomeSuccess) {
+      return Text(state.message);
+    } else {
+      return Text("Initial State");
+    }
+  },
+);
+```
+- **Why use `ValueListenableBuilder`?**
+  - It listens **only** to relevant state changes.
+  - More efficient than `setState()`.
+  - Works well with **dependency injection**.
 
 
 <!-- Links úteis: -->
