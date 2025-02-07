@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:lista_ir_agora/core/core.dart';
 
-/// `AsyncOutput<T>` is a **wrapper for asynchronous operations** that return
-/// an `Output<T>` (i.e., an `Either<BaseException, T>` inside a `Future`).
+/// `Output<T>` is defined in your core library as:
+/// `typedef Output<T> = Either<BaseException, T>`;
+///
+/// This file defines `AsyncOutput<T>` as an alias for `Future<Output<T>>`
+/// and provides helper functions and extension methods for a rich API.
 ///
 /// It provides a **functional approach** for handling asynchronous computations
 /// that may succeed (`Right`) or fail (`Left<BaseException>`).
@@ -12,12 +15,12 @@ import 'package:lista_ir_agora/core/core.dart';
 ///
 /// ### **Example Usage**
 /// ```dart
-/// Future<AsyncOutput<String>> fetchData() async {
+/// AsyncOutput<String> fetchData() async {
 ///   try {
 ///     await Future.delayed(Duration(seconds: 1));
-///     return AsyncOutput.success("Data fetched successfully!");
+///     return success("Data fetched successfully!");
 ///   } catch (e) {
-///     return AsyncOutput.failure(BaseException("Failed to fetch data"));
+///     return failure(BaseException("Failed to fetch data"));
 ///   }
 /// }
 ///
@@ -26,120 +29,93 @@ import 'package:lista_ir_agora/core/core.dart';
 ///
 ///   result
 ///       .map((data) => "Processed: $data")
-///       .bind((data) => AsyncOutput.success("$data 🎉"))
+///       .bind((data) => AsyncOutput.success("$data"))
 ///       .fold(
 ///         (error) => print("Error: ${error.message}"),
 ///         (value) => print("Success: $value"),
 ///       );
 /// }
 /// ```
-class AsyncOutput<T> {
-  /// A `Future` that resolves to an `Output<T>`, encapsulating an asynchronous computation.
-  final Future<Output<T>> _future;
+typedef AsyncOutput<T> = Future<Output<T>>;
 
-  /// Creates an `AsyncOutput` from a `Future<Output<T>>`.
-  AsyncOutput(this._future);
+/// Creates a successful AsyncOutput by wrapping the value into a Right.
+AsyncOutput<T> asyncOutputSuccess<T>(T value) => Future.value(success(value));
 
-  /// Creates a **successful `AsyncOutput<T>`** from a given value.
-  ///
-  /// The value is wrapped inside a `Right<BaseException, T>` and returned as a future.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// final result = AsyncOutput.success("Hello");
-  /// ```
-  factory AsyncOutput.success(T value) =>
-      AsyncOutput(Future.value(success(value)));
+/// Creates a failed AsyncOutput by wrapping the exception into a Left.
+AsyncOutput<T> asyncOutputFailure<T>(BaseException error) =>
+    Future.value(failure<T>(error));
 
-  /// Creates a **failed `AsyncOutput<T>`** from an exception.
-  ///
-  /// The `BaseException` is wrapped inside a `Left<BaseException, T>` and returned as a future.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// final result = AsyncOutput.failure(BaseException("An error occurred"));
-  /// ```
-  factory AsyncOutput.failure(BaseException error) =>
-      AsyncOutput(Future.value(failure(error)));
+/// Converts a synchronous `Output<T>` into an `AsyncOutput<T>`.
+AsyncOutput<T> fromSync<T>(Output<T> output) => Future.value(output);
 
-  /// Transforms `Left` or `Right` into a **new synchronous value** using asynchronous functions.
-  ///
-  /// - If `this` is `Left`, `leftFn` is executed.
-  /// - If `this` is `Right`, `rightFn` is executed.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// final result = await asyncOutput.fold(
-  ///   (error) => "Failed: ${error.message}",
-  ///   (value) => "Success: $value",
-  /// );
-  /// ```
-  Future<R> fold<R>(
-    FutureOr<R> Function(BaseException error) leftFn,
-    FutureOr<R> Function(T value) rightFn,
-  ) async {
-    final result = await _future;
-    return result.fold(leftFn, rightFn);
+extension AsyncOutputExtension<T> on AsyncOutput<T> {
+  /// Transforms the success value using the function [f].
+  AsyncOutput<R> map<R>(FutureOr<R> Function(T value) f) {
+    return then((output) => output.fold(
+          (error) => failure<R>(error),
+          (value) async => success(await f(value)),
+        ));
   }
 
-  /// **Transforms the `Right` value asynchronously using `fn`.**
-  ///
-  /// - If `this` is `Left`, the failure is propagated.
-  /// - Otherwise, `fn` is applied to the `Right` value asynchronously.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// final transformed = asyncOutput.map((value) async => "$value transformed");
-  /// ```
-  AsyncOutput<R> map<R>(FutureOr<R> Function(T value) fn) {
-    return AsyncOutput(
-      _future.then(
-        (either) => either.fold(
-          (error) => failure(error),
-          (value) async => success(await fn(value)),
-        ),
-      ),
-    );
+  /// Chains an asynchronous operation that returns an `Output<R>`.
+  AsyncOutput<R> flatMap<R>(FutureOr<Output<R>> Function(T value) f) {
+    return then((output) => output.fold(
+          (error) => failure<R>(error),
+          (value) => f(value),
+        ));
   }
 
-  /// **Chains a new async operation (`bind` style).**
-  ///
-  /// - If `this` is `Left`, the failure propagates.
-  /// - Otherwise, `fn` is applied to `Right`, returning a new `AsyncOutput<R>`.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// AsyncOutput<String> fetchAndProcessData() {
-  ///   return fetchData().bind((data) => AsyncOutput.success("Processed: $data"));
-  /// }
-  /// ```
-  AsyncOutput<R> bind<R>(AsyncOutput<R> Function(T value) fn) {
-    return AsyncOutput(
-      _future.then(
-        (either) => either.fold(
-          (error) => Future.value(failure(error)),
-          (value) => fn(value)._future,
-        ),
-      ),
-    );
+  /// Alias for [flatMap].
+  AsyncOutput<R> bind<R>(FutureOr<Output<R>> Function(T value) f) => flatMap(f);
+
+  /// Transforms the error value using the function [f].
+  AsyncOutput<T> mapError(
+      FutureOr<BaseException> Function(BaseException error) f) {
+    return then((output) => output.fold(
+          (error) async => failure<T>(await f(error)),
+          (value) => success(value),
+        ));
   }
 
-  /// Converts a **synchronous `Output<T>`** into an **asynchronous `AsyncOutput<T>`**.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// final asyncOutput = AsyncOutput.fromSync(success(42));
-  /// ```
-  static AsyncOutput<T> fromSync<T>(Output<T> output) =>
-      AsyncOutput(Future.value(output));
+  /// Unwraps the AsyncOutput by applying [ifError] or [ifSuccess].
+  Future<R> fold<R>(FutureOr<R> Function(BaseException error) ifError,
+      FutureOr<R> Function(T value) ifSuccess) {
+    return then((output) => output.fold(ifError, ifSuccess));
+  }
 
-  /// **Executes the computation and returns an `Output<T>` asynchronously.**
-  ///
-  /// Use this method when you need to await the final result.
-  ///
-  /// ### **Example**
-  /// ```dart
-  /// Output<String> result = await asyncOutput.execute();
-  /// ```
-  Future<Output<T>> execute() => _future;
+  /// Returns the success value or null if it is a failure.
+  Future<T?> getOrNull() {
+    return then((output) => output.fold((_) => null, (value) => value));
+  }
+
+  /// Returns the error (BaseException) or null if it is a success.
+  Future<BaseException?> getErrorOrNull() {
+    return then((output) => output.fold((error) => error, (_) => null));
+  }
+
+  /// Executes [action] if the AsyncOutput represents a failure.
+  AsyncOutput<T> onFailure(void Function(BaseException error) action) {
+    return then((output) {
+      return output.fold(
+        (error) {
+          action(error);
+          return failure<T>(error);
+        },
+        (value) => success(value),
+      );
+    });
+  }
+
+  /// Executes [action] if the AsyncOutput represents a success.
+  AsyncOutput<T> onSuccess(void Function(T value) action) {
+    return then((output) {
+      return output.fold(
+        (error) => failure<T>(error),
+        (value) {
+          action(value);
+          return success(value);
+        },
+      );
+    });
+  }
 }
