@@ -14,7 +14,7 @@ class RoomPeriodsDto extends DTO {
   });
 
   @override
-  Output<DTO> validate() {
+  Output<RoomPeriodsDto> validate() {
     if (formattedTime.isEmpty) {
       return failure(ValidationException(message: 'Tempo não Informado'));
     }

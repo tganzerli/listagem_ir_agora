@@ -7,7 +7,7 @@ class CategoryItemsDto extends DTO {
   CategoryItemsDto({required this.name, required this.icon});
 
   @override
-  Output<DTO> validate() {
+  Output<CategoryItemsDto> validate() {
     if (name.isEmpty) {
       return failure(
           ValidationException(message: 'Categoria de itens sem nome'));
