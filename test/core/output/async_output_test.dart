@@ -168,4 +168,170 @@ void main() {
           reason: 'Expected first failure message to propagate');
     });
   });
+
+  group('AsyncOutput<T> - mapError', () {
+    test('mapError transforms an error correctly', () async {
+      final exception = DefaultException(message: "Original Error");
+      final transformedException = DefaultException(message: "Mapped Error");
+
+      final asyncOutput = asyncOutputFailure<int>(exception);
+
+      final mappedOutput = asyncOutput.mapError((error) async {
+        expect(error.message, equals("Original Error"),
+            reason: "Original error should be passed to mapError");
+        return transformedException;
+      });
+
+      final result = await mappedOutput;
+
+      expect(result.isLeft, isTrue, reason: "Expected a failure result");
+      expect(result.getLeftOrNull()?.message, equals("Mapped Error"),
+          reason: "Expected transformed error message");
+    });
+
+    test('mapError does not affect a success case', () async {
+      final asyncOutput = asyncOutputSuccess<int>(42);
+
+      final mappedOutput = asyncOutput.mapError((error) async {
+        return DefaultException(message: "Should not be called");
+      });
+
+      final result = await mappedOutput;
+
+      expect(result.isRight, isTrue, reason: "Expected success to remain");
+      expect(result.getOrNull(), equals(42),
+          reason: "Expected original success value to be retained");
+    });
+  });
+
+  group('AsyncOutput<T> - getOrNull', () {
+    test('getOrNull returns value when successful', () async {
+      final asyncOutput = asyncOutputSuccess<int>(10);
+      final result = await asyncOutput.getOrNull();
+
+      expect(result, equals(10),
+          reason: "Expected getOrNull to return the success value");
+    });
+
+    test('getOrNull returns null on failure', () async {
+      final exception = DefaultException(message: "Failure occurred");
+      final asyncOutput = asyncOutputFailure<int>(exception);
+      final result = await asyncOutput.getOrNull();
+
+      expect(result, isNull,
+          reason: "Expected getOrNull to return null on failure");
+    });
+  });
+
+  group('AsyncOutput<T> - getErrorOrNull', () {
+    test('getErrorOrNull returns null when successful', () async {
+      final asyncOutput = asyncOutputSuccess<int>(20);
+      final result = await asyncOutput.getErrorOrNull();
+
+      expect(result, isNull,
+          reason: "Expected getErrorOrNull to return null on success");
+    });
+
+    test('getErrorOrNull returns error when failed', () async {
+      final exception = DefaultException(message: "Test error");
+      final asyncOutput = asyncOutputFailure<int>(exception);
+      final result = await asyncOutput.getErrorOrNull();
+
+      expect(result, equals(exception),
+          reason: "Expected getErrorOrNull to return the actual error");
+    });
+  });
+
+  group('AsyncOutput<T> - onFailure', () {
+    test('onFailure executes action on failure', () async {
+      final exception = DefaultException(message: "Failure case");
+      final asyncOutput = asyncOutputFailure<int>(exception);
+
+      bool actionExecuted = false;
+
+      final handledOutput = asyncOutput.onFailure((error) {
+        actionExecuted = true;
+        expect(error.message, equals("Failure case"),
+            reason: "Expected correct error to be passed to action");
+      });
+
+      await handledOutput;
+
+      expect(actionExecuted, isTrue,
+          reason: "Expected action to be executed on failure");
+    });
+
+    test('onFailure does not execute action on success', () async {
+      final asyncOutput = asyncOutputSuccess<int>(50);
+
+      bool actionExecuted = false;
+
+      final handledOutput = asyncOutput.onFailure((error) {
+        actionExecuted = true;
+      });
+
+      await handledOutput;
+
+      expect(actionExecuted, isFalse,
+          reason: "Expected action to not be executed on success");
+    });
+
+    test('onFailure returns the original failure', () async {
+      final exception = DefaultException(message: "Original Failure");
+      final asyncOutput = asyncOutputFailure<int>(exception);
+      final handledOutput = asyncOutput.onFailure((_) {});
+
+      final result = await handledOutput;
+
+      expect(result.isLeft, isTrue, reason: "Expected failure to be retained");
+      expect(result.getLeftOrNull(), equals(exception),
+          reason: "Expected failure message to remain unchanged");
+    });
+  });
+
+  group('AsyncOutput<T> - onSuccess', () {
+    test('onSuccess executes action on success', () async {
+      final asyncOutput = asyncOutputSuccess<int>(30);
+
+      bool actionExecuted = false;
+
+      final handledOutput = asyncOutput.onSuccess((value) {
+        actionExecuted = true;
+        expect(value, equals(30),
+            reason: "Expected correct value to be passed to action");
+      });
+
+      await handledOutput;
+
+      expect(actionExecuted, isTrue,
+          reason: "Expected action to be executed on success");
+    });
+
+    test('onSuccess does not execute action on failure', () async {
+      final exception = DefaultException(message: "Failure case");
+      final asyncOutput = asyncOutputFailure<int>(exception);
+
+      bool actionExecuted = false;
+
+      final handledOutput = asyncOutput.onSuccess((value) {
+        actionExecuted = true;
+      });
+
+      await handledOutput;
+
+      expect(actionExecuted, isFalse,
+          reason: "Expected action to not be executed on failure");
+    });
+
+    test('onSuccess returns the original success value', () async {
+      final asyncOutput = asyncOutputSuccess<int>(88);
+      final handledOutput = asyncOutput.onSuccess((_) {});
+
+      final result = await handledOutput;
+
+      expect(result.isRight, isTrue, reason: "Expected success to be retained");
+      expect(result.getOrNull(), equals(88),
+          reason: "Expected success value to remain unchanged");
+    });
+  });
 }
