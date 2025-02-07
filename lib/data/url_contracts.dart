@@ -4,5 +4,5 @@ class UrlContracts {
 
 class Api {
   String base = const String.fromEnvironment('BASE_URL');
-  String list = '/1IXK';
+  String goNow = '/1IXK';
 }
