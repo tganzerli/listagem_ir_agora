@@ -1,5 +1,4 @@
 import 'package:intl/intl.dart';
-import 'package:lista_ir_agora/core/contracts/value_objects_types/amount_vo.dart';
 import 'package:lista_ir_agora/core/core.dart';
 
 class PercentageVo extends ValueObject<double> {

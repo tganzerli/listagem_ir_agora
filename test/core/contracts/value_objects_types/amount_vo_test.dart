@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_ir_agora/core/contracts/value_objects_types/amount_vo.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:lista_ir_agora/core/core.dart';
 
