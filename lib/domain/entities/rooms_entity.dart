@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:lista_ir_agora/core/core.dart';
 
 import '../dto/category_items_dto.dart';
@@ -46,4 +48,32 @@ class RoomsEntity extends Entity<String> {
 
     return success(this);
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'imagens': imagens.map((x) => x.toMap()).toList(),
+      'itens': itens,
+      'categoryItems': categoryItems.map((x) => x.toMap()).toList(),
+      'periods': periods.map((x) => x.toMap()).toList(),
+    };
+  }
+
+  factory RoomsEntity.fromMap(Map<String, dynamic> map) {
+    return RoomsEntity(
+      name: map['name'] ?? '',
+      imagens: List<UrlImagemVo>.from(
+          map['imagens']?.map((x) => UrlImagemVo.fromMap(x))),
+      itens: List<String>.from(map['itens']),
+      categoryItems: List<CategoryItemsDto>.from(
+          map['categoryItems']?.map((x) => CategoryItemsDto.fromMap(x))),
+      periods: List<RoomPeriodsDto>.from(
+          map['periods']?.map((x) => RoomPeriodsDto.fromMap(x))),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory RoomsEntity.fromJson(String source) =>
+      RoomsEntity.fromMap(json.decode(source));
 }

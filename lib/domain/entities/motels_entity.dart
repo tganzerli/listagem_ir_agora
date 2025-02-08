@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:lista_ir_agora/core/core.dart';
 
 import 'rooms_entity.dart';
@@ -33,4 +35,28 @@ class MotelsEntity extends Entity<String> {
     }
     return success(this);
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'logo': logo.toMap(),
+      'neighborhood': neighborhood,
+      'motelRooms': motelRooms.map((x) => x.toMap()).toList(),
+    };
+  }
+
+  factory MotelsEntity.fromMap(Map<String, dynamic> map) {
+    return MotelsEntity(
+      name: map['name'] ?? '',
+      logo: UrlImagemVo.fromMap(map['logo']),
+      neighborhood: map['neighborhood'] ?? '',
+      motelRooms: List<RoomsEntity>.from(
+          map['motelRooms']?.map((x) => RoomsEntity.fromMap(x))),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory MotelsEntity.fromJson(String source) =>
+      MotelsEntity.fromMap(json.decode(source));
 }

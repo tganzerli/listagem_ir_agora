@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:lista_ir_agora/core/core.dart';
 
 class RoomPeriodsDto extends DTO {
@@ -30,4 +32,27 @@ class RoomPeriodsDto extends DTO {
 
     return success(this);
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'formattedTime': formattedTime,
+      'amount': amount.toMap(),
+      'fullAmount': fullAmount.toMap(),
+      'percentageDiscount': percentageDiscount.toMap(),
+    };
+  }
+
+  factory RoomPeriodsDto.fromMap(Map<String, dynamic> map) {
+    return RoomPeriodsDto(
+      formattedTime: map['formattedTime'] ?? '',
+      amount: AmountVo.fromMap(map['amount']),
+      fullAmount: AmountVo.fromMap(map['fullAmount']),
+      percentageDiscount: PercentageVo.fromMap(map['percentageDiscount']),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory RoomPeriodsDto.fromJson(String source) =>
+      RoomPeriodsDto.fromMap(json.decode(source));
 }

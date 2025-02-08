@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:lista_ir_agora/core/core.dart';
 
 class CategoryItemsDto extends DTO {
@@ -18,4 +20,23 @@ class CategoryItemsDto extends DTO {
 
     return success(this);
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'icon': icon.toMap(),
+    };
+  }
+
+  factory CategoryItemsDto.fromMap(Map<String, dynamic> map) {
+    return CategoryItemsDto(
+      name: map['name'] ?? '',
+      icon: UrlImagemVo.fromMap(map['icon']),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory CategoryItemsDto.fromJson(String source) =>
+      CategoryItemsDto.fromMap(json.decode(source));
 }
