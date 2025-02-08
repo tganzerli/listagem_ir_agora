@@ -61,7 +61,7 @@ abstract class Command<BaseException, T> extends ValueNotifier<Output<T>?> {
   /// - Calls the provided asynchronous function.
   /// - Catches unexpected errors and logs them.
   /// - Notifies listeners about state changes.
-  Future<void> _execute(Future<Output<T>> Function() action) async {
+  Future<void> _execute(AsyncOutput<T> Function() action) async {
     if (_isExecuting) return;
 
     _isExecuting = true;
@@ -102,7 +102,7 @@ abstract class Command<BaseException, T> extends ValueNotifier<Output<T>?> {
 /// ```
 class Command0<T> extends Command<BaseException, T> {
   /// The asynchronous function to execute.
-  final Future<Output<T>> Function() _action;
+  final AsyncOutput<T> Function() _action;
 
   /// Initializes the command with an action.
   Command0(this._action);
@@ -127,7 +127,7 @@ class Command0<T> extends Command<BaseException, T> {
 /// ```
 class Command1<T, TParam1> extends Command<BaseException, T> {
   /// The asynchronous function that takes one parameter.
-  final Future<Output<T>> Function(TParam1) _action;
+  final AsyncOutput<T> Function(TParam1) _action;
 
   /// Stores the most recent parameter used in execution.
   late TParam1 _param1;
@@ -161,7 +161,7 @@ class Command1<T, TParam1> extends Command<BaseException, T> {
 /// ```
 class Command2<T, TParam1, TParam2> extends Command<BaseException, T> {
   /// The asynchronous function that takes two parameters.
-  final Future<Output<T>> Function(TParam1, TParam2) _action;
+  final AsyncOutput<T> Function(TParam1, TParam2) _action;
 
   /// Stores the most recent first parameter used in execution.
   late TParam1 _param1;
