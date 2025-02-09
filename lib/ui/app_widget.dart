@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'go_now/go_now_page.dart';
+
 class AppWidget extends StatelessWidget {
   const AppWidget({super.key});
 
@@ -7,7 +9,9 @@ class AppWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      routes: {},
+      routes: {
+        '/': (context) => const GoNowPage(),
+      },
     );
   }
 }
