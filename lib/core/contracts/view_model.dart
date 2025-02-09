@@ -67,14 +67,14 @@ abstract class ViewModel<T extends ViewState> extends ChangeNotifier {
 
     await Future.delayed(Duration.zero);
 
+    if (kDebugMode) {
+      debugPrint(
+          "ViewModel State Change: ${_stateNotifier.value} => $newState");
+    }
+
     if (!_isDisposed) {
       _stateNotifier.value = newState;
       notifyListeners();
-
-      if (kDebugMode) {
-        debugPrint(
-            "ViewModel State Change: ${_stateNotifier.value} => $newState");
-      }
     }
   }
 
@@ -91,13 +91,13 @@ abstract class ViewModel<T extends ViewState> extends ChangeNotifier {
   void emit(T newState) {
     if (_isDisposed || _stateNotifier.value == newState) return;
 
-    _stateNotifier.value = newState;
-    notifyListeners();
-
     if (kDebugMode) {
       debugPrint(
           "ViewModel State Change: ${_stateNotifier.value} => $newState");
     }
+
+    _stateNotifier.value = newState;
+    notifyListeners();
   }
 
   /// Ensures safe disposal by delaying the disposal process.
