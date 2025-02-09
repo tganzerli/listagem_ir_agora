@@ -15,9 +15,13 @@ class RestClientHttp implements RestClient {
 
   @override
   Future<RestClientResponse> request(RestClientRequest request) async {
-    final baseUri = Uri.parse(_baseUrl);
-    final resolvedUri = baseUri.resolve(request.path);
-    final uri = resolvedUri.replace(queryParameters: request.queryParameters);
+    if (request.baseUrl.isNotEmpty) {
+      _baseUrl = request.baseUrl;
+    }
+    _baseUrl = _baseUrl + request.path;
+
+    final uri =
+        Uri.parse(_baseUrl).replace(queryParameters: request.queryParameters);
 
     final headers = <String, String>{
       ..._defaultHeaders,
