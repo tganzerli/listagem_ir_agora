@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:lista_ir_agora/core/core.dart';
 
@@ -56,15 +57,14 @@ class RestClientHttp implements RestClient {
 
     try {
       final response = await fetchRequest().timeout(totalTimeout);
-      final responseBody = _parseResponseBody(response);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw RestClientException(
           message: 'HTTP request failed',
           statusCode: response.statusCode,
-          data: responseBody,
+          data: response.body,
           response: RestClientResponse(
-            data: responseBody,
+            data: response.body,
             statusCode: response.statusCode,
             message: response.reasonPhrase,
             request: request,
@@ -72,6 +72,8 @@ class RestClientHttp implements RestClient {
           error: 'Request failed with status ${response.statusCode}',
         );
       }
+
+      final responseBody = _parseResponseBody(response);
 
       return RestClientResponse(
         data: responseBody,
@@ -104,9 +106,14 @@ class RestClientHttp implements RestClient {
       return {'error': 'Empty response from server'};
     }
     try {
-      return jsonDecode(response.body);
-    } catch (_) {
-      return {'error': response.body};
+      Uint8List bytes = response.bodyBytes;
+      String utf8Body = utf8.decode(bytes);
+      return jsonDecode(utf8Body);
+    } catch (e) {
+      throw RestClientException(
+        message: 'Invalid JSON response',
+        error: e,
+      );
     }
   }
 

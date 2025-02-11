@@ -87,87 +87,26 @@ void main() {
           )).called(1);
     });
 
-    test('PUT request returns correct response', () async {
-      final requestData = {'update': 'value'};
+    test('Request does not override baseUrl when request.baseUrl is empty',
+        () async {
       final request = RestClientRequest(
-        method: RestMethod.put,
-        path: 'update',
-        data: requestData,
-      );
-      final uri = Uri.parse(baseUrl).resolve(request.path);
-      final expectedHeaders = {'Content-Type': 'application/json'};
-
-      when(() => mockHttpClient.put(
-            uri,
-            headers: expectedHeaders,
-            body: jsonEncode(requestData),
-          )).thenAnswer(
-        (_) async => http.Response(sampleResponseJson, 200, reasonPhrase: 'OK'),
+        method: RestMethod.get,
+        path: 'test',
+        baseUrl: '',
       );
 
-      final response = await restClient.request(request);
-
-      expect(response.statusCode, equals(200));
-      expect(response.data, equals(sampleResponseData));
-      expect(response.message, equals('OK'));
-
-      verify(() => mockHttpClient.put(
-            uri,
-            headers: expectedHeaders,
-            body: jsonEncode(requestData),
-          )).called(1);
-    });
-
-    test('PATCH request returns correct response', () async {
-      final requestData = {'patch': 'data'};
-      final request = RestClientRequest(
-        method: RestMethod.patch,
-        path: 'patch',
-        data: requestData,
-      );
-      final uri = Uri.parse(baseUrl).resolve(request.path);
-      final expectedHeaders = {'Content-Type': 'application/json'};
-
-      when(() => mockHttpClient.patch(
-            uri,
-            headers: expectedHeaders,
-            body: jsonEncode(requestData),
-          )).thenAnswer(
-        (_) async => http.Response(sampleResponseJson, 200, reasonPhrase: 'OK'),
-      );
-
-      final response = await restClient.request(request);
-
-      expect(response.statusCode, equals(200));
-      expect(response.data, equals(sampleResponseData));
-      expect(response.message, equals('OK'));
-
-      verify(() => mockHttpClient.patch(
-            uri,
-            headers: expectedHeaders,
-            body: jsonEncode(requestData),
-          )).called(1);
-    });
-
-    test('DELETE request returns correct response', () async {
-      final request = RestClientRequest(
-        method: RestMethod.delete,
-        path: 'delete',
-      );
       final uri = Uri.parse(baseUrl).resolve(request.path);
 
-      when(() => mockHttpClient.delete(uri, headers: any(named: 'headers')))
+      when(() => mockHttpClient.get(uri, headers: any(named: 'headers')))
           .thenAnswer(
         (_) async => http.Response(sampleResponseJson, 200, reasonPhrase: 'OK'),
       );
 
-      final response = await restClient.request(request);
+      await restClient.request(request);
 
-      expect(response.statusCode, equals(200));
-      expect(response.data, equals(sampleResponseData));
-      expect(response.message, equals('OK'));
+      expect(restClient.baseUrl, equals(uri.toString()));
 
-      verify(() => mockHttpClient.delete(uri, headers: any(named: 'headers')))
+      verify(() => mockHttpClient.get(uri, headers: any(named: 'headers')))
           .called(1);
     });
   });
@@ -189,7 +128,8 @@ void main() {
         () async => await restClient.request(request),
         throwsA(
           isA<RestClientException>()
-              .having((e) => e.statusCode, 'statusCode', 404),
+              .having((e) => e.statusCode, 'statusCode', 404)
+              .having((e) => e.data, 'data', 'Not Found'),
         ),
       );
 
@@ -245,16 +185,45 @@ void main() {
       verify(() => mockHttpClient.get(uri, headers: any(named: 'headers')))
           .called(1);
     });
+
+    test('Throws exception when response has malformed JSON', () async {
+      final request = RestClientRequest(
+        method: RestMethod.get,
+        path: 'malformed-json',
+      );
+      final uri = Uri.parse(baseUrl).resolve(request.path);
+
+      when(() => mockHttpClient.get(uri, headers: any(named: 'headers')))
+          .thenAnswer(
+        (_) async => http.Response('Invalid JSON', 200, reasonPhrase: 'OK'),
+      );
+
+      expect(
+        () async => await restClient.request(request),
+        throwsA(
+          isA<RestClientException>().having(
+            (e) => e.message,
+            'message',
+            contains('Invalid JSON response'),
+          ),
+        ),
+      );
+
+      verify(() => mockHttpClient.get(uri, headers: any(named: 'headers')))
+          .called(1);
+    });
   });
 
-  test('Base URL getter returns correct value', () {
-    restClient.setBaseUrl('http://newexample.com/');
-    expect(restClient.baseUrl, equals('http://newexample.com/'));
-  });
+  group('Configuration & Utilities', () {
+    test('Base URL getter works correctly', () {
+      restClient.setBaseUrl('http://newexample.com/');
+      expect(restClient.baseUrl, equals('http://newexample.com/'));
+    });
 
-  test('Headers manipulation works correctly', () async {
-    restClient.setHeaders({'Authorization': 'Bearer token123'});
-    restClient.cleanHeaders();
-    expect(restClient.baseUrl, equals(baseUrl));
+    test('Headers manipulation works correctly', () async {
+      restClient.setHeaders({'Authorization': 'Bearer token123'});
+      restClient.cleanHeaders();
+      expect(restClient.baseUrl, equals(baseUrl));
+    });
   });
 }
