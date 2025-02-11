@@ -106,26 +106,5 @@ void main() {
 
       expect(command.result, isNull);
     });
-
-    test('Properly waits for execution completion with waitForCompletion',
-        () async {
-      final completer = Completer<Either<BaseException, int>>();
-      final command = Command0<int>(() async => completer.future);
-
-      final executionFuture = command.execute();
-
-      expect(command.isExecuting, true);
-
-      final waitFuture = command.waitForCompletion();
-      expect(waitFuture, completes);
-
-      completer.complete(right(99));
-      await executionFuture;
-
-      await waitFuture;
-
-      expect(command.isExecuting, false);
-      expect(command.rightResult, 99);
-    });
   });
 }

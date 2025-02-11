@@ -22,21 +22,15 @@ import 'package:lista_ir_agora/core/core.dart';
 /// await command.execute();
 /// print(command.rightResult); // 42
 /// ```
-abstract class Command<BaseException, T> extends ValueNotifier<Output<T>?> {
-  /// Initializes the command with a nullable result state.
-  Command() : super(null);
-
+abstract class Command<BaseException, T> extends ChangeNotifier {
   /// Indicates whether the command is currently executing.
   bool _isExecuting = false;
-
-  /// A [Completer] that allows waiting for the current execution to finish.
-  final Completer<void> _completer = Completer<void>();
 
   /// Returns whether the command is currently executing.
   bool get isExecuting => _isExecuting;
 
   /// Gets the execution result as an `Output<T>`.
-  Output<T>? get result => value;
+  Output<T>? result;
 
   /// Retrieves the successful result (`Right<T>`) if available.
   T? get rightResult => result?.getOrNull();
@@ -51,7 +45,10 @@ abstract class Command<BaseException, T> extends ValueNotifier<Output<T>?> {
   bool get isSuccess => result?.isRight ?? false;
 
   /// Clears the command's result, resetting its state.
-  void clean() => value = null;
+  void clean() {
+    result = null;
+    notifyListeners();
+  }
 
   /// Executes the given asynchronous action in a controlled manner.
   ///
@@ -65,22 +62,16 @@ abstract class Command<BaseException, T> extends ValueNotifier<Output<T>?> {
     if (_isExecuting) return;
 
     _isExecuting = true;
-    value = null;
+    result = null;
+    notifyListeners();
 
     try {
-      value = await action();
+      result = await action();
     } catch (e, stackTrace) {
       debugPrint("Unexpected error during command execution: $e\n$stackTrace");
     } finally {
       _isExecuting = false;
-      _completer.complete();
-    }
-  }
-
-  /// Waits for the current execution to complete before proceeding.
-  Future<void> waitForCompletion() async {
-    if (_isExecuting) {
-      await _completer.future;
+      notifyListeners();
     }
   }
 }
