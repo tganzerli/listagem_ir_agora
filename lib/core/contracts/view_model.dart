@@ -6,12 +6,11 @@ abstract class ViewState {}
 
 /// A generic base class for managing UI state in a Flutter application.
 ///
-/// This class extends `ChangeNotifier`, making it compatible with Flutter's
-/// provider-based state management.
+/// This class extends `ValueListenable<T>`, making it compatible with
+/// Flutter's reactive UI system. It efficiently manages state updates
+/// using `ValueNotifier<T>`, ensuring that only necessary changes trigger UI rebuilds.
 ///
-/// It uses `ValueNotifier<T>` to efficiently notify listeners of state changes.
-///
-/// Example Usage:
+/// ### Example Usage:
 /// ```dart
 /// class MyState extends ViewState {
 ///   final String message;
@@ -26,38 +25,64 @@ abstract class ViewState {}
 ///   }
 /// }
 /// ```
-abstract class ViewModel<T extends ViewState> extends ChangeNotifier {
-  /// Internal state notifier for managing and notifying state changes.
-  final ValueNotifier<T> _stateNotifier;
+abstract class ViewModel<T extends ViewState> implements ValueListenable<T> {
+  /// Internal notifier responsible for holding and updating the state.
+  late final ValueNotifier<T> _stateNotifier;
 
-  /// Tracks whether this ViewModel has been disposed.
+  /// Tracks whether the ViewModel has been disposed.
   bool _isDisposed = false;
 
   /// Initializes the ViewModel with an initial state.
   ///
-  /// The [initialState] parameter is required to define the starting state.
+  /// - The [initialState] parameter sets the starting state.
+  /// - Uses `ValueNotifier<T>` to manage state efficiently.
   ViewModel(T initialState) : _stateNotifier = ValueNotifier<T>(initialState);
 
-  /// Safely retrieves the current state.
+  /// Returns the current state if the ViewModel is still active.
   ///
-  /// Returns `null` if the ViewModel has already been disposed.
+  /// - If the ViewModel is disposed, returns `null`.
+  /// - This is useful for safely accessing state without errors.
   T? get safeState => _isDisposed ? null : _stateNotifier.value;
 
-  /// Retrieves the current state.
+  /// Returns the current state.
   ///
-  /// Throws an error if accessed after disposal.
+  /// - Throws an error if accessed after disposal.
+  /// - Use `safeState` instead if unsure whether the ViewModel is still active.
   T get state => _stateNotifier.value;
 
-  /// Emits a new state asynchronously.
+  /// Retrieves the current state value.
   ///
-  /// This method ensures state transitions happen asynchronously, preventing
-  /// UI blocking or unintended synchronous state updates.
+  /// This is required for implementing `ValueListenable<T>`,
+  /// which allows external listeners (like UI widgets) to react to state changes.
+  @override
+  T get value => _stateNotifier.value;
+
+  /// Adds a listener that is notified when the state changes.
+  ///
+  /// - The [listener] function is called whenever `emit()` or `emitAsync()` updates the state.
+  /// - Useful for UI components that need to react to state changes.
+  @override
+  void addListener(VoidCallback listener) {
+    _stateNotifier.addListener(listener);
+  }
+
+  /// Removes a previously added listener.
+  ///
+  /// - This should be called when the listener is no longer needed to avoid memory leaks.
+  /// - Always pair every `addListener()` call with a `removeListener()` call.
+  @override
+  void removeListener(VoidCallback listener) {
+    _stateNotifier.removeListener(listener);
+  }
+
+  /// Asynchronously updates the state.
   ///
   /// - If the ViewModel is disposed, the update is ignored.
-  /// - If the new state is the same as the current state, no update is performed.
-  /// - Uses `Future.delayed(Duration.zero)` to defer the state change.
+  /// - If the new state is identical to the current state, no update occurs.
+  /// - Uses `Future.delayed(Duration.zero)` to ensure asynchronous state transitions,
+  ///   avoiding UI blocking or race conditions.
   ///
-  /// Example:
+  /// ### Example:
   /// ```dart
   /// await emitAsync(MyState("New State"));
   /// ```
@@ -74,16 +99,16 @@ abstract class ViewModel<T extends ViewState> extends ChangeNotifier {
 
     if (!_isDisposed) {
       _stateNotifier.value = newState;
-      notifyListeners();
     }
   }
 
-  /// Emits a new state synchronously.
+  /// Synchronously updates the state.
   ///
-  /// - Ensures that state changes do not happen after disposal.
-  /// - Uses `Future.microtask` to allow state changes without blocking the UI.
+  /// - Ensures the state is not changed after disposal.
+  /// - Uses `Future.microtask` to allow non-blocking updates.
+  /// - If the new state is identical to the current state, no update occurs.
   ///
-  /// Example:
+  /// ### Example:
   /// ```dart
   /// emit(MyState("Updated State"));
   /// ```
@@ -97,15 +122,14 @@ abstract class ViewModel<T extends ViewState> extends ChangeNotifier {
     }
 
     _stateNotifier.value = newState;
-    notifyListeners();
   }
 
-  /// Ensures safe disposal by delaying the disposal process.
+  /// Safely disposes of the ViewModel by delaying the disposal process.
   ///
-  /// This method is useful when there are asynchronous operations running
-  /// that might still reference the ViewModel.
+  /// - This method is useful when asynchronous operations may still reference the ViewModel.
+  /// - Calls `dispose()` after a short delay to prevent premature disposal issues.
   ///
-  /// Example:
+  /// ### Example:
   /// ```dart
   /// viewModel.disposeSafe();
   /// ```
@@ -114,21 +138,20 @@ abstract class ViewModel<T extends ViewState> extends ChangeNotifier {
     dispose();
   }
 
-  /// Cleans up resources when the ViewModel is no longer needed.
+  /// Disposes of the ViewModel and releases resources.
   ///
-  /// - Disposes the internal `_stateNotifier` to free memory.
-  /// - Ensures disposal happens only once to prevent exceptions.
+  /// - Ensures disposal happens only once to avoid errors.
+  /// - Disposes of the internal `_stateNotifier` to free memory.
+  /// - After disposal, any attempts to update state will be ignored.
   ///
-  /// Example:
+  /// ### Example:
   /// ```dart
   /// viewModel.dispose();
   /// ```
-  @override
   void dispose() {
     if (!_isDisposed) {
       _stateNotifier.dispose();
       _isDisposed = true;
-      super.dispose();
     }
   }
 }

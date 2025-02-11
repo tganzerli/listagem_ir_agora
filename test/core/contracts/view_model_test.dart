@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_ir_agora/core/core.dart';
 
-/// Mock state for testing
 class TestState extends ViewState {
   final String message;
 
@@ -16,10 +15,9 @@ class TestState extends ViewState {
   int get hashCode => message.hashCode;
 
   @override
-  String toString() => "TestState(message: $message)"; // Debugging
+  String toString() => "TestState(message: $message)";
 }
 
-/// A concrete ViewModel for testing
 class TestViewModel extends ViewModel<TestState> {
   TestViewModel() : super(TestState("Initial State"));
 
@@ -70,7 +68,7 @@ void main() {
 
       viewModel.addListener(listener);
       viewModel.updateState("New State");
-      viewModel.updateState("New State"); // Same state, should not notify
+      viewModel.updateState("New State");
 
       expect(notificationCount, equals(1));
 
@@ -102,11 +100,21 @@ void main() {
       }
 
       viewModel.addListener(listener);
-      viewModel.updateState("Initial State"); // Same as current state
+      viewModel.updateState("Initial State");
 
       expect(wasNotified, isFalse);
 
       viewModel.removeListener(listener);
+    });
+
+    test('emit() should not update state if new state is identical', () {
+      viewModel.updateState("New State");
+
+      TestState previousState = viewModel.state;
+
+      viewModel.updateState("New State");
+
+      expect(viewModel.state, same(previousState));
     });
   });
 
