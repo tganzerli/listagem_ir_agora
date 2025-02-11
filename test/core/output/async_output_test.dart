@@ -76,7 +76,6 @@ void main() {
       final exception = DefaultException(message: "Mapping failed");
       final asyncOutput = asyncOutputFailure<int>(exception);
 
-      // The mapping function should not be executed when the output is a failure.
       final mapped = asyncOutput.map((value) {
         callCount++;
         return value * 2;
@@ -157,7 +156,7 @@ void main() {
           .bind((value) => asyncOutputSuccess(value * 3))
           .bind((value) => asyncOutputFailure<int>(
               DefaultException(message: "Failed after second step")))
-          .bind((value) => asyncOutputSuccess(value * 5)); // Should not execute
+          .bind((value) => asyncOutputSuccess(value * 5));
 
       final result = await chained;
 

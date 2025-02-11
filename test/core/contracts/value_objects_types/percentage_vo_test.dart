@@ -75,7 +75,7 @@ void main() {
         'should throw ArgumentError when calculating percentage with invalid fullAmount',
         () {
       final amount = AmountVo(50.0);
-      final fullAmount = AmountVo(0.0); // Invalid full amount
+      final fullAmount = AmountVo(0.0);
 
       expect(() => PercentageVo.calcularPorcentagem(amount, fullAmount),
           throwsA(isA<FormatedException>()));

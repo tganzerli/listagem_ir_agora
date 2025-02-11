@@ -45,7 +45,6 @@ void main() {
       expect(copy.data, equals('updatedData'));
       expect(copy.baseUrl, equals('https://updated.com'));
 
-      // The remaining fields should be unchanged (in this case, null).
       expect(copy.queryParameters, equals(original.queryParameters));
       expect(copy.headers, equals(original.headers));
       expect(copy.sendTimeout, equals(original.sendTimeout));

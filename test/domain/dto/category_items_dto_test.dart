@@ -1,22 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_ir_agora/domain/dto/category_items_dto.dart';
-
-import 'package:mocktail/mocktail.dart';
 import 'package:lista_ir_agora/core/core.dart';
 
-class MockUrlImagemVo extends Mock implements UrlImagemVo {}
-
 void main() {
-  late MockUrlImagemVo mockIcon;
-
-  setUp(() {
-    mockIcon = MockUrlImagemVo();
-  });
-
   group('CategoryItemsDto Validation', () {
     test('should return success when name is not empty and icon is valid', () {
-      when(() => mockIcon.validate()).thenReturn(success(mockIcon));
-      final dto = CategoryItemsDto(name: 'Valid Name', icon: mockIcon);
+      final validIcon = UrlImagemVo('https://example.com/icon.png');
+      final dto = CategoryItemsDto(name: 'Valid Name', icon: validIcon);
 
       final result = dto.validate();
 
@@ -24,8 +16,8 @@ void main() {
     });
 
     test('should return failure when name is empty', () {
-      when(() => mockIcon.validate()).thenReturn(success(mockIcon));
-      final dto = CategoryItemsDto(name: '', icon: mockIcon);
+      final validIcon = UrlImagemVo('https://example.com/icon.png');
+      final dto = CategoryItemsDto(name: '', icon: validIcon);
 
       final result = dto.validate();
 
@@ -35,15 +27,45 @@ void main() {
     });
 
     test('should return failure when icon validation fails', () {
-      when(() => mockIcon.validate())
-          .thenReturn(failure(ValidationException(message: 'Invalid icon')));
-      final dto = CategoryItemsDto(name: 'Valid Name', icon: mockIcon);
+      final invalidIcon = UrlImagemVo('invalid_url');
+      final dto = CategoryItemsDto(name: 'Valid Name', icon: invalidIcon);
 
       final result = dto.validate();
 
       expect(result.isLeft, true);
       expect(result.getLeftOrNull(), isA<ValidationException>());
-      expect(result.getLeftOrNull()?.message, 'Invalid icon');
+      expect(result.getLeftOrNull()?.message, 'Url is not a valid image');
+    });
+  });
+
+  group('CategoryItemsDto Serialization', () {
+    final validIcon = UrlImagemVo('https://example.com/icon.png');
+    final validMap = {
+      'name': 'Valid Name',
+      'icon': 'https://example.com/icon.png',
+    };
+
+    test('should convert toMap correctly', () {
+      final dto = CategoryItemsDto(name: 'Valid Name', icon: validIcon);
+      expect(dto.toMap(), equals(validMap));
+    });
+
+    test('should convert fromMap correctly', () {
+      final dto = CategoryItemsDto.fromMap(validMap);
+      expect(dto.name, 'Valid Name');
+      expect(dto.icon.value, 'https://example.com/icon.png');
+    });
+
+    test('should convert toJson correctly', () {
+      final dto = CategoryItemsDto(name: 'Valid Name', icon: validIcon);
+      final jsonResult = dto.toJson();
+      expect(json.decode(jsonResult), equals(validMap));
+    });
+
+    test('should convert fromJson correctly', () {
+      final dto = CategoryItemsDto.fromJson(json.encode(validMap));
+      expect(dto.name, 'Valid Name');
+      expect(dto.icon.value, 'https://example.com/icon.png');
     });
   });
 }

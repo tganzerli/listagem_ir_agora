@@ -84,7 +84,7 @@ void main() {
     test(
         'should return failure with FormatedException when API response is not a Map<String, dynamic>',
         () async {
-      final invalidResponse = ['Not a Map']; // Resposta inválida
+      final invalidResponse = ['Not a Map'];
       mockRequestResponse(invalidResponse);
 
       final result = await motelsClientHttp.getGoNowList();
