@@ -4,6 +4,12 @@ This test aims to evaluate the candidate's skills in Flutter, Dart, state manage
 
 The listing should display motel name, price, and image, allowing for visual variations without requiring strict adherence to the original design. Additionally, unit tests must be implemented to cover the main components of the application.
 
+## 🎥 Video Demonstrating
+
+Below is the video demonstrating the installation of the application.
+
+[Video Demo](documentation/ScreenRecording.mp4)
+
 ## 📌 Technology
 
 The technology chosen for the development of this project was `Flutter`. Find out more at: [flutter.dev](https://flutter.dev/)
@@ -32,7 +38,7 @@ To ensure the functionality of the exception classes, run the unit tests using:
 flutter test --dart-define-from-file .env
 ```
 
-### **Running tests with coverage**
+### Running tests with coverage
 To generate a coverage report:
 
 ```sh
@@ -47,8 +53,7 @@ xdg-open coverage/html/index.html  # Linux
 start coverage/html/index.html  # Windows
 ```
 
-## 📖 **Documentation**
-Below is a brief documentation explaining why to use environment variables (.env) in Flutter and how to leverage `String.fromEnvironment` directly within a class to manage these configurations.
+## 📖 Documentation
 
 ### Why Use Environment Variables (.env) in Flutter?
 
